@@ -1,8 +1,8 @@
-PWD c:/Users/jakob/OneDrive/University/SS 2023/DRL2023 Homework Group
+PWD c:/Users/jakob/OneDrive/University/SS 2023/DRL2023 Homework Group/Homework 01
 INPUT c:/texlive/2022/texmf.cnf
 INPUT c:/texlive/2022/texmf-dist/web2c/texmf.cnf
 INPUT c:/texlive/2022/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT c:/Users/jakob/OneDrive/University/SS 2023/DRL2023 Homework Group/HW1.tex
+INPUT c:/Users/jakob/OneDrive/University/SS 2023/DRL2023 Homework Group/Homework 01/HW1.tex
 OUTPUT HW1.log
 INPUT c:/texlive/2022/texmf-dist/tex/latex/base/article.cls
 INPUT c:/texlive/2022/texmf-dist/tex/latex/base/article.cls

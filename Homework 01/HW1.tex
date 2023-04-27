@@ -100,9 +100,37 @@ probabilities for moves that lead to a loss.
 
 \section{Task 02}
 Check out the LunarLander environment on OpenAI Gym. Describe the environment as a MDP, 
-include a description how the policy is
+include a description of how the policy is
 formalized.
 \subsection{Solution}
+There are multiple variations to the Lunar Lander environment \textemdash because nothing was 
+specified, we will choose the discrete version without wind.
+\begin{itemize}
+    \item Different to the chess example, we only have an observation space, not a state space. The observation
+    space consists of states $s$, where each state is an 8-dimensional vector. Each state vector contains
+    x and y coordinates of the lander, its x and y linear velocity, its angle, its angular velocity and 
+    two boolean values indicating whether the left and right legs are touching the ground.
+    \item The set of \textbf{actions} $A$ is discrete and includes the following actions: do nothing, fire left orientation engine,
+    fire main engine, fire right orientation engine.
+    \item The \textbf{state dynamics} $p(S_{t+1} | S_t, A_t)$ are deterministic. The next state $S_{t+1}$ is
+    determined by the current state $S_t$ and the action $A_t$.
+    \item A \textbf{reward} is assigned to every action, the reward of the episode is the 
+    sum of all rewards. For each step, the reward:
+    \begin{itemize}
+        \item is increased/decreased the closer/further the lander is to the landing pad.
+        \item is increased/decreased the slower/faster the lander is moving.
+        \item is decreased the more the lander is tilted.
+        \item is $-0.3$ for each step where the main engine is firing,
+        \item is $-0.03$ for each step where the left or right orientation engine is firing,
+        \item is $+10$ for each leg that is touching the ground,
+        \item is $-100$ if the lander crashes,
+        \item is $+100$ if the lander is on the landing pad,
+    \end{itemize}
+    If it scores at least $200$ points, the episode is considered a solution.
+\end{itemize}
+Since we are dealing with an observation space, we cannot use a policy $\pi(a|s)$ that maps every state
+to an action. Instead, we use a policy $\pi(a|o)$ that maps every observation to an action. The policy
+is a probability distribution over actions $a$ given an observation $o$.
 
 \section{Task 03}
 Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
