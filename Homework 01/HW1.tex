@@ -87,11 +87,10 @@ also formalize the respective policy.
     after the opposing player has made their move. $p$ is therefore not deterministic, and includes
     every possible move the opposing player can make after $A_t$.
     \item \textbf{Reward Dynamics} $r(s, a) = \mathbb{E}[R_{t+1} | s, a]$ is the expected reward
-    after taking action $a$ in state $s$. The reward is $1$ if the game is won, $0$ if the game
-    is drawn, and $-1$ if the game is lost. We actively decide against introducing a reward
-    for capturing pieces or similar subgoals: otherwise, the agent might learn to play for
-    the reward instead of playing to win. "[...] the reward signal is not the place to impart to the agent prior knowledge
-    about \emph{how} to achieve what we want it to do." \cite{sutton_bach_barto_2018}
+    after taking action $a$ in state $s$. The reward is $1$ if the game is won and $0$ if it is not. 
+    We actively decide against introducing a reward for capturing pieces or similar subgoals: otherwise, 
+    the agent might learn to play for the reward instead of playing to win. ``[\dots] the reward signal is 
+    not the place to impart to the agent prior knowledge about \emph{how} to achieve what we want it to do.''\cite{sutton_bach_barto_2018}
 \end{itemize}
 Our policy $\pi$, or $\pi(a|s)$, is a probability distribution over actions $a$ given a state $s$.
 A complete policy chooses a move (optimally the best move) for every possible board state.
@@ -103,7 +102,7 @@ Check out the LunarLander environment on OpenAI Gym. Describe the environment as
 include a description of how the policy is
 formalized.
 \subsection{Solution}
-There are multiple variations to the Lunar Lander environment \textemdash because nothing was 
+There are multiple variations to the Lunar Lander environment \textemdash{} because nothing was 
 specified, we will choose the discrete version without wind.
 \begin{itemize}
     \item Different to the chess example, we only have an observation space, not a state space. The observation
@@ -136,18 +135,18 @@ is a probability distribution over actions $a$ given an observation $o$.
 Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
 They explicitly make use of the environment dynamics $(p(s', r | s, a))$.
 \begin{itemize}
-    \item Explain what the environment dynamics (i.e. reward funxtion and
+    \item Explain what the environment dynamics (i.e.\ reward function and
     state transition function) are and give at least two examples.
     \item Discuss: Are the environment dynamics generally known and can practically
-    be used to solve a problem with RL?
+    be used to solve a problem with RL \@?
 \end{itemize}
 \subsection{Solution}
 \textbf{State transition function} $p(s' | s, a)$: \\
 Starting in a state $s$ and taking an action $a$, what state do we end up in? \\
 On the one hand, in the example of the Lunar Lander, we have a deterministic state transition function
 and can thus easily calculate the next state $s'$ given the current state $s$ and the action $a$. 
-On the other hand, consider a Gridworld setup with "icy" tiles: when deciding for an action, we might
-slip or slide further than intended \textemdash this is represented by a stochastic state transition function. \\
+On the other hand, consider a Gridworld setup with ``icy'' tiles: when deciding for an action, we might
+slip or slide further than intended \textemdash{} this is represented by a stochastic state transition function. \\
 
 \textbf{Reward function} $r(s, a)$: \\
 What reward do we get for taking action $a$ in state $s$? \\
