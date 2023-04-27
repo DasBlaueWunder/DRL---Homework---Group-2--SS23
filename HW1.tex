@@ -1,0 +1,126 @@
+\documentclass{article}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{thmtools}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{framed}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tcolorbox}
+\usepackage[nottoc,numbib]{tocbibind}
+
+\colorlet{LightGray}{White!90!Periwinkle}
+\colorlet{LightOrange}{Orange!15}
+\colorlet{LightGreen}{Green!15}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+
+\setstretch{1.2}
+\geometry{
+    textheight=9in,
+    textwidth=5.5in,
+    top=1in,
+    headheight=12pt,
+    headsep=25pt,
+    footskip=30pt
+}
+
+% ------------------------------------------------------------------------------
+
+\begin{document}
+
+% ------------------------------------------------------------------------------
+% Cover Page and ToC
+% ------------------------------------------------------------------------------
+
+\title{ \normalsize \textsc{}
+		\\ [2.0cm]
+		\HRule{1.5pt} \\
+		\LARGE \textbf{\uppercase{Deep Reinforcement Learning 2023}
+		\HRule{2.0pt} \\ [0.6cm] \LARGE{Homework 01} \vspace*{10\baselineskip}}
+		}
+\date{27.04.2023}
+\author{\textbf{Author} \\ 
+        Krishnendu Bose, Jakob Heller, Alexander Wallenstein  \\
+        Group 02 \\
+		Osnabrueck University \\}
+
+\maketitle
+\newpage
+
+% \tableofcontents
+% \newpage
+
+% ------------------------------------------------------------------------------
+
+\section{Task 01}
+You are tasked with creating an AI for the game of chess. To solve the problem
+using Reinforcement Learning, you have to frame the game of chess as a Markov
+Decision Process (MDP). Describe both the game of chess formally as a MDP,
+also formalize the respective policy.
+
+\subsection{Solution}
+\begin{tcolorbox}[colback=LightGray]
+    \textbf{Definition 1.1} \textit{Markov Decision Process (MDP)} \\
+    A finite Markov Decision Process consists of:
+    \begin{itemize}
+        \item the finite set of States $S$, with states $s \in S$,
+        \item the finite set of Actions $A$, with actions $a \in A$,
+        \item the probabilistic state dynamics $p(S_{t+1} | S_t, A_t)$,
+        \item the probabilistic reward dynamics $r(s, a) = \mathbb{E}[R_{t+1} | s, a]$
+    \end{itemize}
+\end{tcolorbox}
+\begin{itemize}
+    \item \textbf{States} $S$ are the possible configurations of the chess board.
+    Although really large (some estimations for \emph{legal} chess positions are around $10^{45}$),
+    that number is indeed finite.
+    \item \textbf{Actions} $A$ are the possible moves a player can make. This includes
+    all possible moves for all pieces, including castling, capturing, promoting and en passant.
+    \item \textbf{State Dynamics} $p(S_{t+1} | S_t, A_t)$ is the probability of the next state
+    $S_{t+1}$ given the current state $S_t$ and the action $A_t$. Note: given a 
+    state $S_t$ and an action $A_t$ of our player, the next state $S_{t+1}$ is the board state
+    after the opposing player has made their move. $p$ is therefore not deterministic, and includes
+    every possible move the opposing player can make after $A_t$.
+    \item \textbf{Reward Dynamics} $r(s, a) = \mathbb{E}[R_{t+1} | s, a]$ is the expected reward
+    after taking action $a$ in state $s$. The reward is $1$ if the game is won, $0$ if the game
+    is drawn, and $-1$ if the game is lost. We actively decide against introducing a reward
+    for capturing pieces or similar subgoals: otherwise, the agent might learn to play for
+    the reward instead of playing to win. "[...] the reward signal is not the place to impart to the agent prior knowledge
+    about \emph{how} to achieve what we want it to do." \cite{sutton_bach_barto_2018}
+\end{itemize}
+Our policy $\pi$, or $\pi(a|s)$, is a probability distribution over actions $a$ given a state $s$.
+A complete policy chooses a move (optimally the best move) for every possible board state.
+In chess, a good policy has very large probabilities for moves that lead to a win, and very small
+probabilities for moves that lead to a loss. 
+
+\section{Task 02}
+Check out the LunarLander environment on OpenAI Gym. Describe the environment as a MDP, 
+include a description how the policy is
+formalized.
+\subsection{Solution}
+
+\section{Task 03}
+Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
+They explicitly make use of the environment dynamics $(p(s', r | s, a))$.
+\begin{itemize}
+    \item Explain what the environment dynamics (i.e. reward funxtion and
+    state transition function) are and give at least two examples.
+    \item Discuss: Are the environment dynamics generally known and can practically
+    be used to solve a problem with RL?
+\end{itemize}
+\subsection{Solution}
+% ------------------------------------------------------------------------------
+% Reference and Cited Works
+% ------------------------------------------------------------------------------
+
+\bibliographystyle{IEEEtran}
+\bibliography{references.bib}
+
+% ------------------------------------------------------------------------------
+
+\end{document}
