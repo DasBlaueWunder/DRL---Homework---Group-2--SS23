@@ -132,6 +132,7 @@ dmypy.json
 *.aux
 *.log
 *.toc
+*.fls
 
 # PDF output - usually a bad idea to keep this in Git
 # *.pdf
