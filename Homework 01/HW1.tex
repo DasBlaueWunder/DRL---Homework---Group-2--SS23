@@ -142,6 +142,27 @@ They explicitly make use of the environment dynamics $(p(s', r | s, a))$.
     be used to solve a problem with RL?
 \end{itemize}
 \subsection{Solution}
+\textbf{State transition function} $p(s' | s, a)$: \\
+Starting in a state $s$ and taking an action $a$, what state do we end up in? \\
+On the one hand, in the example of the Lunar Lander, we have a deterministic state transition function
+and can thus easily calculate the next state $s'$ given the current state $s$ and the action $a$. 
+On the other hand, consider a Gridworld setup with "icy" tiles: when deciding for an action, we might
+slip or slide further than intended \textemdash this is represented by a stochastic state transition function. \\
+
+\textbf{Reward function} $r(s, a)$: \\
+What reward do we get for taking action $a$ in state $s$? \\
+The predefined rewards for the Lunar Lander incentivize the agent to land on the landing pad as fast 
+and safe as possible. A typical reward structure for a Gridworld setup could be some small negative reward
+for each step and a large positive reward if the action causes the agent to reach the goal. \\
+
+\textbf{Are the environment dynamics generally known?} \\
+If we consider very constructed examples such as Gridworld or the Lunar Lander, then the answer is yes.
+After all, we defined the environment dynamics ourselves. If we talk about the real world or
+multi-agent environments, then the answer is almost always no. 
+Considering chess for example, since we already talked about
+that in this homework: we know what move will result in what board state since we know the
+rules of chess, but we cannot know what move the opponent will make. Of course we could be able to make 
+reasonable assumptions, but we never know with certainty. \\
 % ------------------------------------------------------------------------------
 % Reference and Cited Works
 % ------------------------------------------------------------------------------
