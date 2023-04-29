@@ -34,17 +34,10 @@ class GridWorld:
         self.start = start
         self.goal = goal
         self.state = start
-        self.state = start
 
         # Mutable default arguments are bad practice, that's why we do this
-        if walls is None:
-            self.walls = [(1, 1), (2, 1)]
-        else:
-            self.walls = walls
-        if winds is None:
-            self.winds = [(2, 2, 3, 0.5)]
-        else:
-            self.winds = winds
+        self.walls = walls or [(1, 1), (2, 1)]
+        self.winds = winds or [(2, 2, 3, 0.5)]
 
         # Check if the start and goal are valid
         if start in self.walls:
@@ -53,14 +46,15 @@ class GridWorld:
             raise ValueError("Goal position must not be a wall.")
         if start == goal:
             raise ValueError("Start and goal positions must be different.")
-        if start[0] < 0 or start[0] >= self.size[0]:
+        if not self._is_within_bounds(start):
             raise ValueError("Start position must be within the gridworld.")
-        if start[1] < 0 or start[1] >= self.size[1]:
-            raise ValueError("Start position must be within the gridworld.")
-        if goal[0] < 0 or goal[0] >= self.size[0]:
+        if not self._is_within_bounds(goal):
             raise ValueError("Goal position must be within the gridworld.")
-        if goal[1] < 0 or goal[1] >= self.size[1]:
-            raise ValueError("Goal position must be within the gridworld.")
+
+    def _is_within_bounds(self, state: (int, int)) -> bool:
+        """Check if a state is within the bounds of the gridworld."""
+        x, y = state
+        return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 
     def main_loop(self):
         """Run a main loop for the environment (1 episode)."""
