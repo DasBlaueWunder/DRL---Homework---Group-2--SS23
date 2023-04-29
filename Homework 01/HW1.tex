@@ -58,13 +58,14 @@
 
 % ------------------------------------------------------------------------------
 
-\section{Task 01}
+\section{Understanding MDPs}
+\subsection{Chess}
 You are tasked with creating an AI for the game of chess. To solve the problem
 using Reinforcement Learning, you have to frame the game of chess as a Markov
 Decision Process (MDP). Describe both the game of chess formally as a MDP,
 also formalize the respective policy.
 
-\subsection{Solution}
+\subsubsection{Solution}
 \begin{tcolorbox}[colback=LightGray]
     \textbf{Definition 1.1} \textit{Markov Decision Process (MDP)} \\
     A finite Markov Decision Process consists of:
@@ -97,11 +98,11 @@ A complete policy chooses a move (optimally the best move) for every possible bo
 In chess, a good policy has very large probabilities for moves that lead to a win, and very small
 probabilities for moves that lead to a loss. 
 
-\section{Task 02}
+\subsection{LunarLander}
 Check out the LunarLander environment on OpenAI Gym. Describe the environment as a MDP, 
 include a description of how the policy is
 formalized.
-\subsection{Solution}
+\subsubsection{Solution}
 There are multiple variations to the Lunar Lander environment \textemdash{} because nothing was 
 specified, we will choose the discrete version without wind.
 \begin{itemize}
@@ -131,7 +132,7 @@ Since we are dealing with an observation space, we cannot use a policy $\pi(a|s)
 to an action. Instead, we use a policy $\pi(a|o)$ that maps every observation to an action. The policy
 is a probability distribution over actions $a$ given an observation $o$.
 
-\section{Task 03}
+\subsection{Model Based RL: Accessing Environment Dynamics}
 Discuss the Policy Evaluation and Policy Iteration algorithms from the lecture.
 They explicitly make use of the environment dynamics $(p(s', r | s, a))$.
 \begin{itemize}
@@ -140,7 +141,7 @@ They explicitly make use of the environment dynamics $(p(s', r | s, a))$.
     \item Discuss: Are the environment dynamics generally known and can practically
     be used to solve a problem with RL \@?
 \end{itemize}
-\subsection{Solution}
+\subsubsection{Solution}
 \textbf{State transition function} $p(s' | s, a)$: \\
 Starting in a state $s$ and taking an action $a$, what state do we end up in? \\
 On the one hand, in the example of the Lunar Lander, we have a deterministic state transition function
@@ -162,6 +163,20 @@ Considering chess for example, since we already talked about
 that in this homework: we know what move will result in what board state since we know the
 rules of chess, but we cannot know what move the opponent will make. Of course we could be able to make 
 reasonable assumptions, but we never know with certainty. \\
+
+\section{Implementing A GridWorld}
+\subsection{Look up some examples}
+Look up some examples of GridWorld! List at least three links or references to
+different GridWorlds you could find online.
+\subsubsection{Solution}
+\begin{itemize}
+    \item \url{https://github.com/openai/gym/blob/master/gym/envs/toy_text/frozen_lake.py}
+    \item \url{https://github.com/MatthewFilipovich/rl-gridworld/blob/master/gridworld.py}
+    \item \url{https://github.com/hmeretti/grid-world}  
+\end{itemize} \par
+
+The rest of the homework is about implementing a GridWorld environment. The solutions can 
+thus be found in Homework 01/gridworld.py.
 % ------------------------------------------------------------------------------
 % Reference and Cited Works
 % ------------------------------------------------------------------------------
