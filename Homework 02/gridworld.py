@@ -5,6 +5,7 @@ import random
 import time
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 class GridWorld:
@@ -197,7 +198,11 @@ class GridWorld:
         return 1 if state == self.goal else self.step_cost
 
     def first_visit_mc_control(
-        self, num_iterations: int = 100, epsilon: float = 0.1, gamma: float = 0.9
+        self,
+        num_iterations: int = 100,
+        epsilon: float = 0.1,
+        gamma: float = 0.9,
+        plot: str = None,
     ) -> None:
         """Perform on-policy first-visit Monte Carlo control, using epsilon-greedy exploration.
 
@@ -212,6 +217,10 @@ class GridWorld:
                 num_iterations (int): The number of iterations to perform.
                 epsilon (float): The probability of taking a random action.
                 gamma (float): The discount factor.
+                plot (str):
+                    None: Do not plot anything.
+                    "time": Plot the mean return over the amount of seconds it took.
+                    "iteration": Plot the mean return over the amount of iterations.
         """
         # Initialize an arbitrary epsilon-soft policy. It is a dictionary that maps each state to a probability distribution over actions
         policy = {}
@@ -219,13 +228,21 @@ class GridWorld:
             for action in self.action_space():
                 policy[(state, action)] = 1 / len(self.action_space())
         # Initialize the state-action value function to arbitrary values for each state-action pair
-        # q is a dictionary that maps each state-action pair to a state-action value
         q = {}
         for state in self.states:
             for action in self.action_space():
                 q[(state, action)] = 0
         # Empty list of returns for each state-action pair
         returns = defaultdict(list)
+
+        # Initialize an empty list to store the average return per episode
+        average_returns = []
+
+        # Initialize an empty list to store the time per episode
+        episode_times = []
+
+        # Store start time
+        start_time = time.time()
 
         # For each iteration...
         counter = 0
@@ -234,6 +251,7 @@ class GridWorld:
                 self.print_policy(policy)
                 time.sleep(0.5)
                 counter = 0
+
             try:  # Catch KeyboardInterrupt
                 # Generate an episode using the epsilon-soft policy
                 self.reset()
@@ -250,18 +268,8 @@ class GridWorld:
                     self.state = next_state
                     if self.state == self.goal:
                         break
+
                 # Update the state-action value function using the first-visit Monte Carlo method
-                # G = 0
-                # for state, action, reward in reversed(episode):
-                #     G = gamma * G + reward
-                #     if (state, action) not in [
-                #         (x[0], x[1]) for x in episode[: len(episode) - 1]
-                #     ]:
-                #         returns[(state, action)].append(G)
-                #         q[(state, action)] = np.mean(returns[(state, action)])
-                # Update the policy to be greedy with respect to the state-action value function
-                # Iterate over all states in the episode
-                # Keep track of visited states
                 visited = set()
                 G = 0
                 # For each tuple in the episode
@@ -277,6 +285,8 @@ class GridWorld:
                         returns[(state, action)].append(G)
                         # Calculate the mean of all returns for the state and update the value function
                         q[(state, action)] = np.mean(returns[(state, action)])
+
+                # Update the policy to be greedy with respect to the state-action value function
                 for state, _, _ in episode:
                     # Select action greedily with respect to the state-action value function
                     best_action = np.argmax(
@@ -291,11 +301,36 @@ class GridWorld:
                             )
                         else:
                             policy[(state, action)] = epsilon / len(self.action_space())
+
+                # Store the average return of this episode
+                average_return = sum([x[2] for x in episode]) / len(episode)
+                average_returns.append(average_return)
+
+                # Store the time of this episode
+                episode_times.append(time.time() - start_time)
+
                 counter += 1
             except KeyboardInterrupt:
                 break
+        # Store end time
+        end_time = time.time()
+
+        # Calculate the number of seconds it took to train the agent
+        training_time = end_time - start_time
+
         print(f"Training finished after {num_iterations} iterations. Resulting policy:")
         self.print_policy(policy)
+        if plot:
+            if plot == "iteration":
+                # Plot the returns obtained in each episode
+                plt.plot(range(num_iterations), average_returns)
+                plt.xlabel("Iteration")
+            elif plot == "time":
+                # Plot the returns obtained in each episode
+                plt.plot(episode_times, average_returns)
+                plt.xlabel("Time (seconds)")
+            plt.ylabel("Mean return-per-episode")
+            plt.show()
 
     def first_visit_mc_evaluation(self, num_iterations: int = 1000) -> np.ndarray:
         """Perform first-visit Monte Carlo evaluation.
@@ -451,7 +486,7 @@ if "__main__" == __name__:
         goal=(4, 0),
         walls=[()],
         winds=[(3, 0, 3, 0.99), (3, 1, 3, 0.99), (3, 2, 3, 0.99)],
-        step_cost=-0.1,
+        step_cost=-0.05,
     )
     # print("\n" + "Initial state, representation of the environment")
     # print("S: start, G: goal, W: wall, ^>v<: wind direction \n")
@@ -480,4 +515,4 @@ if "__main__" == __name__:
     # V = env.first_visit_mc_evaluation(10000)
     # env.visualize_value_function(V)
 
-    env.first_visit_mc_control(num_iterations=1000, epsilon=0.1)
+    env.first_visit_mc_control(num_iterations=1000, epsilon=0.1, plot="iteration")
