@@ -1,4 +1,4 @@
-from Gridworld import GridWorld
+from gridworld import GridWorld
 
 
 def main():
