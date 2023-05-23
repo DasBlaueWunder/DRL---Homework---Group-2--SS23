@@ -1,4 +1,6 @@
 from gridworld import GridWorld
+from sarsa import SARSA
+from mccontrol import MCControl
 
 
 def main():
@@ -11,13 +13,18 @@ def main():
         winds=[(3, 0, 3, 0.99), (3, 1, 3, 0.99), (3, 2, 3, 0.99)],
         step_cost=-0.05,
     )
-    print("\n" + "Initial state, representation of the environment")
-    print("S: start, G: goal, W: wall, ^>v<: wind direction \n")
-    env.render()
 
-    # Example run (with visualization)
-    # env.main_loop()
-    env.first_visit_mc_control(num_iterations=100, epsilon=0.1, plot="iteration")
+    # SARSA
+    sarsa = SARSA(
+        env, num_episodes=1000, epsilon=1, alpha=0.1, gamma=0.99, plot="wallclock"
+    )
+    # sarsa.run()
+
+    # MC Control
+    mccontrol = MCControl(
+        env, num_episodes=5000, epsilon=0.1, gamma=0.8, plot="episode"
+    )
+    mccontrol.run()
 
 
 if "__main__" == __name__:
