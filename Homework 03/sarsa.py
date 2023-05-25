@@ -1,6 +1,7 @@
 """Implementation of SARSA algorithm for the gridworld."""
 
 import time
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -10,7 +11,15 @@ class SARSA:
     """SARSA algorithm for the gridworld."""
 
     def __init__(
-        self, env, num_episodes=100, gamma=1, alpha=0.1, epsilon=1, plot="episode"
+        self,
+        env,
+        num_episodes=100,
+        gamma=1,
+        alpha=0.1,
+        epsilon=1,
+        plot="episode",
+        load=None,
+        save="sarsa.pkl",
     ):
         """Initialize SARSA."""
         self.env = env
@@ -19,8 +28,13 @@ class SARSA:
         self.alpha = alpha
         self.epsilon = epsilon
         self.plot = plot
-        self.Q = np.zeros((env.size[0], env.size[1], 4))
-        self.Q[env.goal[0], env.goal[1], :] = num_episodes
+        if not load:
+            self.Q = np.zeros((env.size[0], env.size[1], 4))
+            self.Q[env.goal[0], env.goal[1], :] = num_episodes
+        else:
+            pickle_in = open(load, "rb")
+            self.Q = pickle.load(pickle_in)
+        self.save = save
 
     def choose_action(self, state):
         """Choose action based on epsilon-greedy policy."""
@@ -43,6 +57,10 @@ class SARSA:
         episode_time = np.zeros(self.num_episodes)
         returns = np.zeros(self.num_episodes)
         start_time = time.time()
+
+        # For the second task
+        q_list = np.zeros(self.num_episodes)
+
         for episode in tqdm(range(self.num_episodes)):
             self.env.reset()
             total_return = 0
@@ -59,9 +77,14 @@ class SARSA:
                 action = next_action
                 total_return += reward
             episode_time[episode] = time.time() - start_time
-            # steps[episode] = step
             returns[episode] = total_return
+
+            # Store Q-value of very first state-action pair
+            q_list[episode] = self.Q[0, 0, 0]
+
+            # Decay epsilon
             self.epsilon -= 2 / self.num_episodes if self.epsilon > 0.01 else 0.01
+
         # Plot average return per episode
         if self.plot == "episode":
             plt.plot(np.arange(1, self.num_episodes + 1), returns)
@@ -73,5 +96,15 @@ class SARSA:
             plt.xlabel("Wallclock Time")
             plt.ylabel("Average Return")
             plt.show()
+        elif self.plot is None:
+            pass
         else:
             raise ValueError("plot should be 'episode' or 'iteration'")
+
+        # Save Q-values
+        if self.save:
+            file = open(self.save, "wb")
+            pickle.dump(self.Q, file)
+            file.close()
+
+        return q_list

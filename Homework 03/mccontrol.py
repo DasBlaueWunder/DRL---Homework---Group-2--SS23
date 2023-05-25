@@ -1,5 +1,6 @@
 """Implementation of Monte Carlo Control algorithm for the gridworld."""
 
+import pickle
 import time
 from collections import defaultdict
 import numpy as np
@@ -10,27 +11,46 @@ from tqdm import tqdm
 class MCControl:
     """Monte Carlo Control algorithm for the gridworld."""
 
-    def __init__(self, env, num_episodes=100, epsilon=0.1, gamma=0.9, plot="episode"):
+    def __init__(
+        self,
+        env,
+        num_episodes=100,
+        epsilon=0.1,
+        gamma=0.9,
+        plot="episode",
+        load=None,
+        save="mccontrol.pkl",
+    ):
         self.env = env
         self.num_episodes = num_episodes
         self.epsilon = epsilon
         self.gamma = gamma
         self.plot = plot
+        self.load = load
+        self.save = save
 
     def run(self) -> None:
         """Perform on-policy first-visit Monte Carlo control, using epsilon-greedy exploration"""
-        # Initialize an arbitrary epsilon-soft policy
-        policy = {}
-        for state in self.env.states:
-            for action in self.env.action_space():
-                policy[(state, action)] = 1 / len(self.env.action_space())
-        # Initialize the state-action value function to arbitrary values for each state-action pair
-        q = {}
-        for state in self.env.states:
-            for action in self.env.action_space():
-                q[(state, action)] = 0
+        if not self.load:
+            # Initialize an arbitrary epsilon-soft policy
+            policy = {}
+            for state in self.env.states:
+                for action in self.env.action_space():
+                    policy[(state, action)] = 1 / len(self.env.action_space())
+            # Initialize the state-action value function to arbitrary values for each state-action pair
+            q = {}
+            for state in self.env.states:
+                for action in self.env.action_space():
+                    q[(state, action)] = 0
+        else:
+            pickle_in = open(self.load, "rb")
+            policy, q = pickle.load(pickle_in)
+
         # Empty list of returns for each state-action pair
         returns = defaultdict(list)
+
+        # For the second task
+        q_list = np.zeros(self.num_episodes)
 
         # Initialize an empty list to store the average return per episode
         average_returns = []
@@ -42,7 +62,7 @@ class MCControl:
         start_time = time.time()
 
         # For each iteration...
-        for _ in tqdm(range(self.num_episodes)):
+        for i in tqdm(range(self.num_episodes)):
             # Generate an episode using the epsilon-soft policy
             self.env.reset()
             episode = []
@@ -103,10 +123,13 @@ class MCControl:
             # Store the time of this episode
             episode_times.append(time.time() - start_time)
 
-        print(
-            f"Training finished after {self.num_episodes} iterations. Resulting policy:"
-        )
-        self.env.print_policy(policy)
+            # Store Q-value of very first state-action pair
+            q_list[i] = q[((0, 0), 0)]
+
+        # print(
+        #     f"Training finished after {self.num_episodes} iterations. Resulting policy:"
+        # )
+        # self.env.print_policy(policy)
         if self.plot:
             if self.plot == "episode":
                 # Plot the returns obtained in each episode
@@ -118,3 +141,11 @@ class MCControl:
                 plt.xlabel("Time (seconds)")
             plt.ylabel("Mean return-per-episode")
             plt.show()
+
+        if self.save:
+            # Save policy and q
+            file = open(self.save, "wb")
+            pickle.dump((policy, q), file)
+            file.close()
+
+        return q_list
