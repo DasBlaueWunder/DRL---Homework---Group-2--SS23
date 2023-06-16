@@ -1,0 +1,20 @@
+{
+  "exp_name": "cartpole2",
+  "agent": "DQNAgent",
+  "cuda": false,
+  "gpu_device": 0,
+  "seed": 1312,
+  "batch_size": 750,
+  "gamma": 0.99,
+  "eps_start": 1,
+  "eps_end": 0.01,
+  "eps_decay": 0.999995,
+  "target_update": 500,
+  "lr": 0.001,
+  "memory_capacity": 20000,
+  "num_episodes": 1000000,
+  "train_frequency": 100,
+  "env_name": "CartPole-v1",
+  "checkpoint_dir": "results/models/",
+  "checkpoint": "1923488.pth"
+}
