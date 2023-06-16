@@ -168,6 +168,3 @@ tensorboard/
 
 # wandb files
 wandb/
-
-# the checkpoints from our models
-models/
