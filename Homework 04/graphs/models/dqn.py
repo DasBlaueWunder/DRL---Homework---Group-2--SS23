@@ -1,3 +1,5 @@
+"""Implementation of DQN model as a PyTorch nn.Module."""
+
 import torch
 import torch.nn as nn
 
