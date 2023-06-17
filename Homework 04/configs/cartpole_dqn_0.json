@@ -16,5 +16,5 @@
   "train_frequency": 100,
   "env_name": "CartPole-v1",
   "checkpoint_dir": "results/models/",
-  "checkpoint": "658463.pth"
+  "checkpoint": "2581301.pth"
 }
