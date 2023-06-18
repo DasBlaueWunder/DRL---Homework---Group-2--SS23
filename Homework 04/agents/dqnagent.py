@@ -162,54 +162,6 @@ class DQNAgent:
 
     def train_step(self):
         """Perform one training step."""
-        # state_transitions = self.replay_buffer.sample(self.config.batch_size)
-
-        # one_batch = Transition(*zip(*state_transitions))
-
-        # mask = torch.Tensor(  # [128]
-        #     tuple(map(lambda s: s is not None, one_batch.observation)),
-        #     device=self.device,
-        # ).bool()
-        # cur_states = torch.from_numpy(
-        #     np.stack(one_batch.last_observation)
-        # ).to(  # [128, 4]
-        #     self.device
-        # )
-        # actions = (
-        #     torch.from_numpy(np.stack(one_batch.action))
-        #     .to(self.device)
-        #     .type(torch.int64)
-        # )  # [128]
-        # rewards = torch.from_numpy(np.stack(one_batch.reward)).to(self.device)  # [128]
-        # next_states = torch.from_numpy(  # [128, 4]
-        #     np.stack([s for s in one_batch.observation if s is not None])
-        # ).to(self.device)
-
-        # cur_state_values = self.model(cur_states)  # [128, 2]
-        # qvalue = cur_state_values.gather(1, actions.unsqueeze(1))  # [128, 1]
-
-        # with torch.no_grad():  #
-        #     next_state_values = torch.zeros(
-        #         self.config.batch_size, device=self.device
-        #     )  # [128]
-        #     next_state_values[mask] = (
-        #         self.target(next_states).max(1)[0][mask].detach()
-        #     )  # [128]
-
-        # qvalue_next = ((next_state_values * self.config.gamma) + rewards).float()
-        # loss = F.mse_loss(qvalue, qvalue_next.unsqueeze(1))
-
-        # self.model.opt.zero_grad()
-        # loss.backward()
-        # for param in self.model.parameters():
-        #     param.grad.data.clamp_(-1, 1)
-        # self.model.opt.step()
-        # return loss
-
-        # sample from replay buffer
-        # import ipdb
-
-        # ipdb.set_trace()
         state_transitions = self.replay_buffer.sample(self.config.batch_size)
 
         # convert the batch to tensors # TODO: add this to ReplayBuffer class # TODO: use torch.from_numpy
@@ -247,12 +199,6 @@ class DQNAgent:
         one_hot_actions = F.one_hot(  # [128, 2]
             torch.LongTensor(actions), self.env.action_space.n
         ).to(self.device)
-
-        # TODO: replace with Huber loss
-        # loss = F.mse_loss(
-        #     rewards + mask[:, 0] * self.config.gamma * qvals_next,
-        #     torch.sum(qvals * one_hot_actions, -1),
-        # )
 
         # TODO: replace with Huber loss
         loss = (
@@ -334,13 +280,12 @@ class DQNAgent:
                     ]
                     self.episode_rewards = []
                     self.epochs_since_target_update += 1
-                    if self.config.tau >= 1:
-                        if (
-                            self.epochs_since_target_update
-                            > self.config.target_update_rate
-                        ):
-                            self.update_target_network("hard")
-                            self.epochs_since_target_update = 0
+                    if (
+                        self.config.tau >= 1
+                        and self.epochs_since_target_update > self.config.tau
+                    ):
+                        self.update_target_network("hard")
+                        self.epochs_since_target_update = 0
                     else:
                         self.update_target_network("soft")
                         self.epochs_since_target_update = 0
