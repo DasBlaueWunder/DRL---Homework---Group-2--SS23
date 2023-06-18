@@ -25,20 +25,21 @@ def main(test=False):
         config.model_dir = f"results/models/{config.exp_name}"
         os.makedirs(config.model_dir, exist_ok=True)
 
-    if test:
+    if config.test:
         # create checkpoint path
         config.checkpoint_file = (
             config.checkpoint_dir + config.exp_name + "/" + config.checkpoint
         )
 
-    if not test:
-        wandb.init(project="drl2023-dqn", name=config.exp_name, config=config)
     agent_class = globals()[config.agent]
-    agent = agent_class(config, test)
+    agent = agent_class(config, config.test)
     # agent = DQNAgent(config)
     # agent.load_checkpoint(config.checkpoint_file)
+    if not config.test:
+        wandb.init(project="drl2023-dqn", name=config.exp_name, config=config)
+        agent.prefill_replay_buffer()
     agent.train()
 
 
 if __name__ == "__main__":
-    main(test=True)
+    main(test=False)

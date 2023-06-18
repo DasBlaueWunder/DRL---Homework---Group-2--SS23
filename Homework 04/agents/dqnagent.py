@@ -7,6 +7,7 @@ from easydict import EasyDict
 
 import wandb
 import gymnasium as gym
+import ipdb
 
 import torch
 import torch.nn.functional as F
@@ -78,7 +79,7 @@ class DQNAgent:
 
         # load model
         self.model = DQN(
-            self.env.observation_space.shape, self.env.action_space.n, config.lr
+            self.env.observation_space.shape, self.env.action_space.n, config
         ).to(self.device)
         if self.checkpoint_file is not None:
             print(f"Loading checkpoint from {self.checkpoint_file}")
@@ -88,20 +89,20 @@ class DQNAgent:
 
         # load target network
         self.target = DQN(
-            self.env.observation_space.shape, self.env.action_space.n, config.lr
+            self.env.observation_space.shape, self.env.action_space.n, config
         ).to(self.device)
-        self.update_target_network()
+        self.update_target_network("hard")
 
         self.replay_buffer = ReplayBuffer(config.memory_capacity)
         self.steps_since_train = 0
         self.epochs_since_target_update = 0
-
         self.step_num = 0
-
         self.episode_rewards = []
         self.rolling_reward = 0
-
         self.eps = config.eps_start
+        self.max_reward = [-10000, 0]
+        # list for rolling average reward (last 100 episodes)
+        self.episode_reward_list = []
 
     def get_action(self):
         """Get action from model using epsilon-greedy policy."""
@@ -118,23 +119,111 @@ class DQNAgent:
             )
         return action
 
-    def update_target_network(self):
+    def update_target_network(self, type: str):
         """Update target network with model weights."""
-        self.target.load_state_dict(self.model.state_dict())
+        if type == "hard":
+            # hard update: θ_target = θ_model after a set number of epochs
+            self.target.load_state_dict(self.model.state_dict())
+        else:
+            # soft update: θ_target = τ*θ_model + (1 - τ)*θ_target
+            for target_param, model_param in zip(
+                self.target.parameters(), self.model.parameters()
+            ):
+                target_param.data.copy_(
+                    self.config.tau * model_param.data
+                    + (1.0 - self.config.tau) * target_param.data
+                )
+
+    def prefill_replay_buffer(self):
+        """Prefill replay buffer with uniform random actions. Fill it to 1/4 capacity."""
+        # create vectorized environment
+        print("Prefilling replay buffer:")
+        print(f"Loading {self.config.num_envs} environments...")
+        env = gym.vector.make(self.config.env_name, self.config.num_envs)
+        for _ in tqdm(
+            range(
+                self.config.memory_capacity
+                // self.config.prefill_quotient
+                // self.config.num_envs
+            )
+        ):
+            observations, _ = env.reset()
+            # choose random actions for each environment
+            actions = env.action_space.sample()
+            next_observations, rewards, dones, _, _ = env.step(actions)
+            for observation, action, reward, next_observation, done in zip(
+                observations, actions, rewards, next_observations, dones
+            ):
+                self.replay_buffer.insert(
+                    Transition(observation, action, reward, next_observation, done)
+                )
+        env.close()
+        print("Done")
 
     def train_step(self):
         """Perform one training step."""
+        # state_transitions = self.replay_buffer.sample(self.config.batch_size)
+
+        # one_batch = Transition(*zip(*state_transitions))
+
+        # mask = torch.Tensor(  # [128]
+        #     tuple(map(lambda s: s is not None, one_batch.observation)),
+        #     device=self.device,
+        # ).bool()
+        # cur_states = torch.from_numpy(
+        #     np.stack(one_batch.last_observation)
+        # ).to(  # [128, 4]
+        #     self.device
+        # )
+        # actions = (
+        #     torch.from_numpy(np.stack(one_batch.action))
+        #     .to(self.device)
+        #     .type(torch.int64)
+        # )  # [128]
+        # rewards = torch.from_numpy(np.stack(one_batch.reward)).to(self.device)  # [128]
+        # next_states = torch.from_numpy(  # [128, 4]
+        #     np.stack([s for s in one_batch.observation if s is not None])
+        # ).to(self.device)
+
+        # cur_state_values = self.model(cur_states)  # [128, 2]
+        # qvalue = cur_state_values.gather(1, actions.unsqueeze(1))  # [128, 1]
+
+        # with torch.no_grad():  #
+        #     next_state_values = torch.zeros(
+        #         self.config.batch_size, device=self.device
+        #     )  # [128]
+        #     next_state_values[mask] = (
+        #         self.target(next_states).max(1)[0][mask].detach()
+        #     )  # [128]
+
+        # qvalue_next = ((next_state_values * self.config.gamma) + rewards).float()
+        # loss = F.mse_loss(qvalue, qvalue_next.unsqueeze(1))
+
+        # self.model.opt.zero_grad()
+        # loss.backward()
+        # for param in self.model.parameters():
+        #     param.grad.data.clamp_(-1, 1)
+        # self.model.opt.step()
+        # return loss
+
         # sample from replay buffer
+        # import ipdb
+
+        # ipdb.set_trace()
         state_transitions = self.replay_buffer.sample(self.config.batch_size)
 
-        # convert the batch to tensors
-        cur_states = torch.stack(([torch.Tensor(s[0]) for s in state_transitions])).to(
+        # convert the batch to tensors # TODO: add this to ReplayBuffer class # TODO: use torch.from_numpy
+        cur_states = torch.stack(
+            ([torch.Tensor(s[0]) for s in state_transitions])
+        ).to(  # [128, 4]
             self.device
         )
-        rewards = torch.stack(([torch.Tensor([s[3]]) for s in state_transitions])).to(
+        rewards = torch.stack(
+            ([torch.Tensor([s[2]]) for s in state_transitions])
+        ).to(  # [128, 1]
             self.device
         )
-        mask = torch.stack(
+        mask = torch.stack(  # [128, 1]
             (
                 [
                     torch.Tensor([0]) if s[4] else torch.Tensor([1])
@@ -142,20 +231,28 @@ class DQNAgent:
                 ]
             )
         ).to(self.device)
-        next_states = torch.stack(([torch.Tensor(s[2]) for s in state_transitions])).to(
+        next_states = torch.stack(
+            ([torch.Tensor(s[3]) for s in state_transitions])
+        ).to(  # [128, 4]
             self.device
         )
-        actions = [s[1] for s in state_transitions]
+        actions = [s[1] for s in state_transitions]  # 128 (list)
 
         # compute next q values
         with torch.no_grad():
-            qvals_next = self.target(next_states).max(-1)[0]
+            qvals_next = self.target(next_states).max(-1)[0]  # [128]
 
         self.model.opt.zero_grad()
-        qvals = self.model(cur_states)
-        one_hot_actions = F.one_hot(
+        qvals = self.model(cur_states)  # [128, 2]
+        one_hot_actions = F.one_hot(  # [128, 2]
             torch.LongTensor(actions), self.env.action_space.n
         ).to(self.device)
+
+        # TODO: replace with Huber loss
+        # loss = F.mse_loss(
+        #     rewards + mask[:, 0] * self.config.gamma * qvals_next,
+        #     torch.sum(qvals * one_hot_actions, -1),
+        # )
 
         # TODO: replace with Huber loss
         loss = (
@@ -167,6 +264,9 @@ class DQNAgent:
             ** 2
         ).mean()
         loss.backward()
+        # clip gradients
+        for param in self.model.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.model.opt.step()
         return loss
 
@@ -177,22 +277,30 @@ class DQNAgent:
             while True:
                 if self.test:
                     self.env.render()
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
                 progress.update(1)
                 action = self.get_action()
                 observation, reward, done, truncated, _ = self.env.step(action)
                 self.rolling_reward += reward
 
+                # check for nan reward (debugging)
+                if np.isnan(reward) or np.isnan(self.rolling_reward):
+                    ipdb.set_trace()
+
                 reward = reward * 0.1
                 self.replay_buffer.insert(
-                    Transition(self.last_observation, action, observation, reward, done)
+                    Transition(self.last_observation, action, reward, observation, done)
                 )
                 self.last_observation = observation
 
                 if done or truncated:
                     self.episode_rewards.append(self.rolling_reward)
                     if self.test:
-                        print(f"Episode reward: {self.rolling_reward}")
+                        self.episode_rewards.append(self.rolling_reward)
+                        rolling_average = round(np.mean(self.episode_rewards[-100:]), 2)
+                        print(
+                            f"Episode reward: {self.rolling_reward}, Rolling average: {rolling_average}"
+                        )
                     self.rolling_reward = 0
                     self.last_observation, _ = self.env.reset()
 
@@ -210,24 +318,42 @@ class DQNAgent:
                         {
                             "loss": loss.detach().cpu().item(),
                             "epsilon": self.eps,
-                            "avg_reward": np.mean(self.episode_rewards),
                         },
                         step=self.step_num,
                     )
+                    if self.episode_rewards:
+                        wandb.log(
+                            {
+                                "avg_reward": np.mean(self.episode_rewards),
+                            },
+                            step=self.step_num,
+                        )
+                    self.max_reward = [
+                        max(self.max_reward[0], np.mean(self.episode_rewards)),
+                        self.step_num,
+                    ]
                     self.episode_rewards = []
                     self.epochs_since_target_update += 1
-                    if self.epochs_since_target_update > self.config.target_update:
-                        print("Updating target network")
-                        self.update_target_network()
+                    if self.config.tau >= 1:
+                        if (
+                            self.epochs_since_target_update
+                            > self.config.target_update_rate
+                        ):
+                            self.update_target_network("hard")
+                            self.epochs_since_target_update = 0
+                    else:
+                        self.update_target_network("soft")
                         self.epochs_since_target_update = 0
+                    self.steps_since_train = 0
+
+                    if self.step_num % 1000 == 0:
                         torch.save(
                             self.target.state_dict(),
                             f"{self.config.model_dir}/{self.step_num}.pth",
                         )
 
-                    self.steps_since_train = 0
-
         except KeyboardInterrupt:
             pass
         finally:
             self.env.close()
+            print(f"Max reward: {self.max_reward} at step {self.step_num}")

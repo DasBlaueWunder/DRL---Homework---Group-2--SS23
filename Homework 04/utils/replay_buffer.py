@@ -19,6 +19,10 @@ class ReplayBuffer(object):  # TODO: implement prioritized experience replay
         self.buffer[self.index % self.buffer_size] = transition
         self.index += 1
 
+    def __len__(self):
+        """Not the actual length but the number of transitions inserted so far."""
+        return min(self.index, self.buffer_size)
+
     def sample(self, batch_size):
         assert batch_size < min(self.index, self.buffer_size)
         if self.index < self.buffer_size:
